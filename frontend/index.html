@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Pipeline Failure Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f0f2f5;
+    margin: 0;
+}
+
+.header {
+    background: #007bff;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 20px;
+}
+
+.container {
+    width: 900px;
+    margin: auto;
+    margin-top: 20px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+h3 {
+    margin-bottom: 10px;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+}
+
+.primary { background: #007bff; }
+.success { background: #28a745; }
+.warning { background: #ffc107; color: black; }
+
+.result {
+    text-align: center;
+    font-size: 18px;
+    margin-top: 10px;
+}
+
+.chart-container {
+    width: 300px;
+    height: 300px;
+    margin: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    text-align: center;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">🚀 Pipeline Failure Prediction Dashboard</div>
+
+<div class="container">
+
+<!-- AUTO PREDICT -->
+<div class="card">
+    <h3>⚡ Auto Fetch Prediction</h3>
+    <button class="primary" onclick="autoPredict()">Run Auto Prediction</button>
+</div>
+
+<!-- CSV UPLOAD -->
+<div class="card">
+    <h3>📂 Upload Pipeline Logs</h3>
+
+    <input type="file" id="fileInput">
+    <button class="success" onclick="uploadFile()">Upload & Predict</button>
+
+    <table id="resultTable"></table>
+</div>
+
+<!-- MANUAL INPUT -->
+<div class="card">
+    <h3>✍️ Manual Prediction</h3>
+
+    <form id="predictForm">
+        <input type="number" placeholder="Pipeline ID" id="pipeline_id" required>
+        <input type="number" placeholder="Execution Time" id="execution_time" required>
+        <input type="number" placeholder="Records Processed" id="records_processed" required>
+        <input type="number" placeholder="Error Count" id="error_count" required>
+        <input type="number" placeholder="CPU Usage" id="cpu_usage" required>
+        <input type="number" placeholder="Memory Usage" id="memory_usage" required>
+        <input type="number" placeholder="Data Delay" id="data_delay" required>
+
+        <button class="warning" type="submit">Predict</button>
+    </form>
+
+    <div class="result" id="result"></div>
+    <div class="result" id="reason"></div>
+
+    <div class="chart-container">
+        <canvas id="chart"></canvas>
+    </div>
+</div>
+
+
+</div>
+
+<script>
+
+// MANUAL
+document.getElementById("predictForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const data = {
+        pipeline_id: Number(pipeline_id.value),
+        execution_time: Number(execution_time.value),
+        records_processed: Number(records_processed.value),
+        error_count: Number(error_count.value),
+        cpu_usage: Number(cpu_usage.value),
+        memory_usage: Number(memory_usage.value),
+        data_delay: Number(data_delay.value)
+    };
+
+    const res = await fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    showResult(result);
+});
+
+// AUTO
+async function autoPredict() {
+    const res = await fetch("http://127.0.0.1:5000/auto_predict");
+    const result = await res.json();
+    showResult(result);
+}
+
+// UPLOAD
+async function uploadFile() {
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("http://127.0.0.1:5000/upload_predict", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+    displayTable(data);
+}
+
+// SHOW RESULT
+function showResult(r) {
+    result.innerText = r.prediction === 1 ? "⚠️ High Risk" : "✅ Safe";
+    reason.innerText = r.reason || "";
+    drawChart(r.failure_probability);
+}
+
+// CHART
+function drawChart(p) {
+    const ctx = chart.getContext("2d");
+
+    if (window.myChart) window.myChart.destroy();
+
+    window.myChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: ["Risk", "Safe"],
+            datasets: [{
+                data: [p, 1-p],
+                backgroundColor: ["#ff4d4d", "#4caf50"]
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+// TABLE
+function displayTable(data) {
+    const table = resultTable;
+    table.innerHTML = "";
+
+    if (!Array.isArray(data)) {
+        table.innerHTML = "<tr><td>Error loading data</td></tr>";
+        return;
+    }
+
+    const headers = Object.keys(data[0]);
+    table.innerHTML += "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+
+    data.forEach(row => {
+        table.innerHTML += "<tr>" +
+            headers.map(h => `<td>${row[h]}</td>`).join("") +
+            "</tr>";
+    });
+}
+
+</script>
+
+</body>
+</html>

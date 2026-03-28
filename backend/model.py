@@ -28,3 +28,28 @@ joblib.dump(model, "backend/saved_model/model.pkl")
 joblib.dump(scaler, "backend/saved_model/scaler.pkl")
 
 print("Model and scaler saved!")
+
+# ---------------- ROOT CAUSE ANALYSIS ----------------
+
+# Get feature importance
+importance = model.feature_importances_
+
+# Feature names
+feature_names = [
+    "pipeline_id",
+    "execution_time",
+    "records_processed",
+    "error_count",
+    "cpu_usage",
+    "memory_usage",
+    "data_delay"
+]
+
+# Create dataframe for better visualization
+importance_df = pd.DataFrame({
+    "feature": feature_names,
+    "importance": importance
+}).sort_values(by="importance", ascending=False)
+
+print("\nFeature Importance:")
+print(importance_df)
