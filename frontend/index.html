@@ -1,237 +1,1627 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
-    <title>Pipeline Failure Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PipelineGuard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
+/* ════════════════════════════════════
+   DESIGN TOKENS
+════════════════════════════════════ */
+:root {
+  /* Darker, more saturated backgrounds */
+  --bg:           #05070a;
+  --surface:      #0d1117;
+  --surface2:     #161b22;
+  --surface3:     #21262d;
+  --border:       #30363d;
+  --border2:      #484f58;
+
+  /* High-contrast text */
+  --text:         #f0f6fc;
+  --text-sub:     #8b949e;
+  --text-dim:     #484f58;
+
+  /* Primary Accent: Electric Violet (Replaces Amber) */
+  --amber:        #7ac743; 
+  --amber-bg:     rgba(191, 122, 240, 0.12);
+  --amber-border: rgba(191, 122, 240, 0.35);
+
+  /* Secondary Accent: Neon Cyan (Replaces Teal) */
+  --teal:         #00f2ff;
+  --teal-bg:      rgba(0, 242, 255, 0.1);
+  --teal-border:  rgba(0, 242, 255, 0.3);
+
+  /* Danger Accent: Vivid Pink-Red */
+  --red:          #d52741;
+  --red-bg:       rgba(255, 75, 130, 0.1);
+  --red-border:   rgba(255, 75, 130, 0.3);
+
+  --blue:         #34b7ce;
+  --blue-bg:      rgba(75, 145, 255, 0.1);
+
+  --sidebar-w:    280px; /* Adjusted to prevent overlap */
+}
+
+/* ════════════════════════════════════
+   BASE
+════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
 body {
-    font-family: Arial;
-    background: #f0f2f5;
-    margin: 0;
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-.header {
-    background: #007bff;
-    color: white;
-    padding: 15px;
-    text-align: center;
-    font-size: 20px;
+/* ════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════ */
+:root {
+  /* Increase this value until the overlap stops—usually around 280px to 320px */
+  --sidebar-w: 350px; 
 }
 
-.container {
-    width: 900px;
-    margin: auto;
-    margin-top: 20px;
+.sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  /* Prevent horizontal overflow */
+  overflow-x: hidden; 
 }
 
+.logo-wrap {
+  padding: 30px 26px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 35px;
+  font-weight: 850;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+.logo-name em { color: var(--amber); font-style: normal; }
+.logo-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.nav-links {
+  padding: 22px 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--text-sub);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+  letter-spacing: 0.01em;
+}
+.nav-btn:hover { background: var(--surface2); color: var(--text); }
+.nav-btn.active {
+  background: var(--amber-bg);
+  color: var(--amber);
+  font-weight: 600;
+  border: 1px solid var(--amber-border);
+}
+.nav-ico { font-size: 18px; width: 22px; text-align: center; }
+
+.sidebar-foot {
+  padding: 20px 22px 24px;
+  border-top: 1px solid var(--border);
+}
+.live-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+.live-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 8px var(--teal-border);
+  flex-shrink: 0;
+  animation: livepulse 2.5s ease infinite;
+}
+@keyframes livepulse { 0%,100%{opacity:1} 55%{opacity:0.2} }
+
+/* ════════════════════════════════════
+   MAIN LAYOUT
+════════════════════════════════════ */
+.main-wrap {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOP BAR */
+.topbar {
+  padding: 18px 42px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+.tb-left {}
+.tb-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
+.tb-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+.tb-right { display: flex; gap: 12px; align-items: center; }
+
+/* ALERT */
+.alert-bar {
+  display: none;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 42px;
+  background: var(--red-bg);
+  border-bottom: 1px solid var(--red-border);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--red);
+}
+.alert-bar.show { display: flex; }
+.alert-bar button { margin-left: auto; background: none; border: none; color: var(--red); font-size: 20px; cursor: pointer; line-height: 1; }
+
+/* PAGE CONTENT */
+.content {
+  padding: 40px 42px 72px;
+  flex: 1;
+}
+.page { display: none; animation: pageIn 0.25s ease; }
+.page.active { display: block; }
+@keyframes pageIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+
+/* ════════════════════════════════════
+   PAGE HEADER
+════════════════════════════════════ */
+.page-hdr {
+  margin-bottom: 36px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  color: var(--amber);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.page-desc {
+  font-size: 15px;
+  color: var(--text-sub);
+  margin-top: 7px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* ════════════════════════════════════
+   GRIDS
+════════════════════════════════════ */
+.g3  { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-bottom: 24px; }
+.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.g-dash  { display: grid; grid-template-columns: 1fr 360px; gap: 22px; }
+.g-pred  { display: grid; grid-template-columns: 1fr 420px; gap: 22px; }
+
+/* ════════════════════════════════════
+   CARDS
+════════════════════════════════════ */
 .card {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  position: relative;
+}
+.card:last-child { margin-bottom: 0; }
+
+/* coloured top stripe */
+.card[data-accent="amber"]::before { content:''; position:absolute; top:0; left:24px; right:24px; height:2px; background:linear-gradient(90deg,transparent,var(--amber),transparent); border-radius:2px; }
+.card[data-accent="teal"]::before  { content:''; position:absolute; top:0; left:24px; right:24px; height:2px; background:linear-gradient(90deg,transparent,var(--teal),transparent);  border-radius:2px; }
+.card[data-accent="red"]::before   { content:''; position:absolute; top:0; left:24px; right:24px; height:2px; background:linear-gradient(90deg,transparent,var(--red),transparent);   border-radius:2px; }
+.card[data-accent="blue"]::before  { content:''; position:absolute; top:0; left:24px; right:24px; height:2px; background:linear-gradient(90deg,transparent,var(--blue),transparent);  border-radius:2px; }
+
+/* CARD LABEL */
+.card-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  color: var(--white);
+  letter-spacing: 0.1em;
+  text-transform: uppercse;
+  margin-bottom: 20px;
+  font-weight: 900;
+}
+.card-label-bar {
+  width: 15px; height: 2px;
+  background: var(--amber);
+  border-radius: 1px;
+  flex-shrink: 0;
 }
 
-h3 {
-    margin-bottom: 10px;
+/* ════════════════════════════════════
+   STAT CARDS
+════════════════════════════════════ */
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 52px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.stat-value .unit {
+  font-size: 22px;
+  color: var(--text-dim);
+  font-weight: 600;
+  margin-left: 4px;
+}
+.stat-desc {
+  font-size: 14px;
+  color: var(--text-dim);
+  font-weight: 400;
+  margin-bottom: 18px;
+}
+.stat-bar-track {
+  height: 4px;
+  background: var(--surface3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  width: 0%;
+  transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-input {
-    width: 100%;
-    padding: 8px;
-    margin: 5px 0;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+/* ════════════════════════════════════
+   BUTTONS
+════════════════════════════════════ */
+.btn {
+  padding: 11px 22px;
+  border-radius: 9px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.btn-amber {
+  background: var(--amber);
+  color: #0b0d12;
+}
+.btn-amber:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px var(--amber-border);
+}
+.btn-outline {
+  background: transparent;
+  color: var(--text-sub);
+  border: 1px solid var(--border2);
+}
+.btn-outline:hover { border-color: var(--amber); color: var(--amber); }
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--text-sub);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+.btn-red-soft {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+.btn-red-soft:hover { background: rgba(242,97,75,0.2); }
+.btn-full { width: 100%; justify-content: center; }
+.btn-sm { padding: 8px 16px; font-size: 13px; }
+
+/* SPINNER */
+.spin {
+  display: none;
+  width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,0.15);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spinr 0.65s linear infinite;
+}
+.spin.on { display: inline-block; }
+@keyframes spinr { to { transform: rotate(360deg); } }
+
+/* ════════════════════════════════════
+   THRESHOLD ROW
+════════════════════════════════════ */
+.thr-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 24px;
+}
+.thr-row label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-sub);
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.thr-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  color: var(--amber);
+  font-weight: 600;
+  min-width: 42px;
+}
+.thr-hint { font-size: 13px; color: var(--text-dim); white-space: nowrap; }
+input[type="range"] {
+  -webkit-appearance: none;
+  flex: 1;
+  height: 4px;
+  background: var(--surface3);
+  border-radius: 2px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--amber);
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--amber-border);
+  transition: transform 0.1s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+/* ════════════════════════════════════
+   FORM INPUTS
+════════════════════════════════════ */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.fg { display: flex; flex-direction: column; gap: 7px; }
+.fg label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-sub);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.fi {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 15px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+.fi::placeholder { color: var(--text-dim); }
+.fi:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px var(--amber-bg);
 }
 
-button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 8px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    color: white;
-    font-weight: bold;
+/* ════════════════════════════════════
+   RESULT DISPLAY
+════════════════════════════════════ */
+.result-center {
+  text-align: center;
+  padding: 26px 16px 16px;
+}
+.big-prob {
+  font-family: 'Syne', sans-serif;
+  font-size: 80px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.big-prob .pct-sym {
+  font-size: 32px;
+  color: var(--text-dim);
+}
+.prob-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+.verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 16px 0 12px;
+  letter-spacing: 0.01em;
+}
+.v-safe { background: var(--teal-bg); color: var(--teal); border: 1px solid var(--teal-border); }
+.v-risk { background: var(--red-bg);  color: var(--red);  border: 1px solid var(--red-border); }
+
+.reason-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 14px;
+  color: var(--text-sub);
+  text-align: left;
+  line-height: 1.65;
+  margin-top: 10px;
 }
 
-.primary { background: #007bff; }
-.success { background: #28a745; }
-.warning { background: #ffc107; color: black; }
-
-.result {
-    text-align: center;
-    font-size: 18px;
-    margin-top: 10px;
+/* ════════════════════════════════════
+   SHAP PANEL
+════════════════════════════════════ */
+.shap-legend {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.shap-leg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-sub);
+  font-weight: 500;
+}
+.shap-leg-sq {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
 }
 
-.chart-container {
-    width: 300px;
-    height: 300px;
-    margin: auto;
+.shap-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.shap-row:last-of-type { border-bottom: none; }
+
+.shap-feat {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text-sub);
+  width: 148px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.shap-bar-wrap {
+  flex: 1;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  background: var(--surface2);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.shap-bar-pos {
+  height: 100%;
+  background: var(--red);
+  border-radius: 6px;
+  transition: width 0.9s cubic-bezier(0.16,1,0.3,1);
+  min-width: 3px;
+  box-shadow: 0 0 8px var(--red-border);
+}
+.shap-bar-neg {
+  height: 100%;
+  background: var(--teal);
+  border-radius: 6px;
+  transition: width 0.9s cubic-bezier(0.16,1,0.3,1);
+  min-width: 3px;
+  box-shadow: 0 0 8px var(--teal-border);
+}
+.shap-pp {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.shap-pp.pos { color: var(--red); }
+.shap-pp.neg { color: var(--teal); }
+.shap-pp.zero { color: var(--text-dim); }
+
+.shap-note {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  border: 1px solid var(--border);
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
+/* ════════════════════════════════════
+   BADGES / CHIPS
+════════════════════════════════════ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 13px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
+.chip-safe { background: var(--teal-bg); color: var(--teal); border: 1px solid var(--teal-border); }
+.chip-risk { background: var(--red-bg);  color: var(--red);  border: 1px solid var(--red-border); }
+.chip-warn { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
 
-th, td {
-    border: 1px solid #ddd;
-    padding: 6px;
-    text-align: center;
+/* ════════════════════════════════════
+   FEED
+════════════════════════════════════ */
+.feed-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+  animation: feedSlide 0.3s ease;
+}
+.feed-row:last-child { border-bottom: none; }
+@keyframes feedSlide { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:none} }
+.feed-time { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-dim); width: 72px; flex-shrink: 0; }
+.feed-type { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--amber); font-weight: 600; width: 60px; flex-shrink: 0; }
+.feed-msg  { font-size: 14px; color: var(--text-sub); flex: 1; }
+
+/* ════════════════════════════════════
+   HISTORY TABLE
+════════════════════════════════════ */
+.htable { width: 100%; border-collapse: collapse; font-size: 14px; }
+.htable thead th {
+  text-align: left;
+  padding: 12px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+}
+.htable tbody td {
+  padding: 13px 16px;
+  color: var(--text-sub);
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.htable tbody tr:last-child td { border-bottom: none; }
+.htable tbody tr:hover td { background: var(--surface2); color: var(--text); }
+
+/* ════════════════════════════════════
+   WHAT-IF SLIDERS
+════════════════════════════════════ */
+.sl-group { margin-bottom: 20px; }
+.sl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.sl-name { font-size: 14px; color: var(--text-sub); font-weight: 500; }
+.sl-val  { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--amber); font-weight: 600; }
+
+.risk-meter { height: 8px; background: var(--surface3); border-radius: 4px; overflow: hidden; margin: 12px 0 6px; }
+.risk-fill  { height: 100%; border-radius: 4px; transition: width 0.4s ease, background 0.4s ease; }
+.risk-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+
+/* ════════════════════════════════════
+   UPLOAD ZONE
+════════════════════════════════════ */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.over { border-color: var(--amber); background: var(--amber-bg); }
+.upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-icon { font-size: 30px; margin-bottom: 10px; }
+.upload-text { font-size: 15px; color: var(--text-sub); font-weight: 500; }
+.upload-hint { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+
+/* ════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════ */
+.empty {
+  text-align: center;
+  padding: 44px 24px;
+  color: var(--text-dim);
+}
+.empty-icon { font-size: 34px; margin-bottom: 12px; opacity: 0.4; }
+.empty-text { font-size: 15px; line-height: 1.6; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 22px 0; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════ */
+@media (max-width: 1000px) {
+  .sidebar { display: none; }
+  .main-wrap { margin-left: 0; }
+  .g-dash, .g-pred { grid-template-columns: 1fr; }
+  .g3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 620px) {
+  .g3, .g2 { grid-template-columns: 1fr; }
+  .content { padding: 24px 20px 60px; }
+  .topbar  { padding: 16px 20px; }
+  .form-grid { grid-template-columns: 1fr; }
 }
 </style>
-
 </head>
-
 <body>
 
-<div class="header">🚀 Pipeline Failure Prediction Dashboard</div>
+<!-- ═══════════════════════════════
+  SIDEBAR
+═══════════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <div class="logo-name">Pipeline<em>Guard</em></div>
+    <div class="logo-tag">v2.1 · Failure Detection</div>
+  </div>
 
-<div class="container">
+  <nav class="nav-links">
+    <button class="nav-btn active" onclick="gotoPage('dashboard',this)">
+      <span class="nav-ico">◈</span> Dashboard
+    </button>
+    <button class="nav-btn" onclick="gotoPage('predict',this)">
+      <span class="nav-ico">⟳</span> Predict
+    </button>
+    <button class="nav-btn" onclick="gotoPage('whatif',this)">
+      <span class="nav-ico">◎</span> What-If
+    </button>
+    <button class="nav-btn" onclick="gotoPage('history',this)">
+      <span class="nav-ico">≡</span> History
+    </button>
+  </nav>
 
-<!-- AUTO PREDICT -->
-<div class="card">
-    <h3>⚡ Auto Fetch Prediction</h3>
-    <button class="primary" onclick="autoPredict()">Run Auto Prediction</button>
-</div>
-
-<!-- CSV UPLOAD -->
-<div class="card">
-    <h3>📂 Upload Pipeline Logs</h3>
-
-    <input type="file" id="fileInput">
-    <button class="success" onclick="uploadFile()">Upload & Predict</button>
-
-    <table id="resultTable"></table>
-</div>
-
-<!-- MANUAL INPUT -->
-<div class="card">
-    <h3>✍️ Manual Prediction</h3>
-
-    <form id="predictForm">
-        <input type="number" placeholder="Pipeline ID" id="pipeline_id" required>
-        <input type="number" placeholder="Execution Time" id="execution_time" required>
-        <input type="number" placeholder="Records Processed" id="records_processed" required>
-        <input type="number" placeholder="Error Count" id="error_count" required>
-        <input type="number" placeholder="CPU Usage" id="cpu_usage" required>
-        <input type="number" placeholder="Memory Usage" id="memory_usage" required>
-        <input type="number" placeholder="Data Delay" id="data_delay" required>
-
-        <button class="warning" type="submit">Predict</button>
-    </form>
-
-    <div class="result" id="result"></div>
-    <div class="result" id="reason"></div>
-
-    <div class="chart-container">
-        <canvas id="chart"></canvas>
+  <div class="sidebar-foot">
+    <div class="live-pill">
+      <div class="live-dot"></div>
+      API · localhost:5000
     </div>
-</div>
+  </div>
+</aside>
 
+<!-- ═══════════════════════════════
+  MAIN
+═══════════════════════════════ -->
+<div class="main-wrap">
 
-</div>
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-title" id="topTitle">Dashboard</div>
+      <div class="tb-sub"   id="topSub">Pipeline health overview</div>
+    </div>
+    <div class="tb-right">
+      <button class="btn btn-outline btn-sm" onclick="loadDashboard()">↺ Refresh</button>
+      <button class="btn btn-amber btn-sm"   onclick="autoPredict()">
+        <span class="spin" id="autoSpin"></span>
+        ⚡ Auto Predict
+      </button>
+    </div>
+  </div>
 
+  <!-- ALERT -->
+  <div class="alert-bar" id="alertBar">
+    <span>⚠</span>
+    <span id="alertMsg">High failure probability detected!</span>
+    <button onclick="this.parentElement.classList.remove('show')">✕</button>
+  </div>
+
+  <!-- PAGES -->
+  <div class="content">
+
+  <!-- ═══ DASHBOARD ════════════════════════════ -->
+  <div id="page-dashboard" class="page active">
+
+    <div class="page-hdr">
+      <div>
+        <div class="eyebrow">Overview</div>
+        <div class="page-title">Health Monitor</div>
+        <div class="page-desc">Real-time pipeline performance metrics and failure risk signals</div>
+      </div>
+    </div>
+
+    <!-- 3 BIG STAT CARDS -->
+    <div class="g3">
+
+      <div class="card" data-accent="blue">
+        <div class="card-label"><div class="card-label-bar" style="background:var(--blue)"></div>Avg Execution Time</div>
+        <div class="stat-value" id="sExec">
+          — <span class="unit">s</span>
+        </div>
+        <div class="stat-desc">seconds per run</div>
+        <div class="stat-bar-track">
+          <div class="stat-bar-fill" id="sExecFill" style="background:var(--blue)"></div>
+        </div>
+      </div>
+
+      <div class="card" data-accent="red">
+        <div class="card-label"><div class="card-label-bar" style="background:var(--red)"></div>Avg Error Count</div>
+        <div class="stat-value" style="color:var(--red)" id="sErr">
+          —
+        </div>
+        <div class="stat-desc">errors per run</div>
+        <div class="stat-bar-track">
+          <div class="stat-bar-fill" id="sErrFill" style="background:var(--red)"></div>
+        </div>
+      </div>
+
+      <div class="card" data-accent="amber">
+        <div class="card-label"><div class="card-label-bar"></div>Avg CPU Load</div>
+        <div class="stat-value" style="color:var(--amber)" id="sCpu">
+          — <span class="unit">%</span>
+        </div>
+        <div class="stat-desc">percent utilization</div>
+        <div class="stat-bar-track">
+          <div class="stat-bar-fill" id="sCpuFill" style="background:var(--amber)"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MAIN 2-COL -->
+    <div class="g-dash">
+
+      <!-- LEFT -->
+      <div>
+
+        <!-- Prediction Feed -->
+        <div class="card">
+          <div class="card-label"><div class="card-label-bar" style="background:var(--blue)"></div>Live Prediction Feed</div>
+          <div id="feedWrap">
+            <div class="empty">
+              <div class="empty-icon">📡</div>
+              <div class="empty-text">Run a prediction to see the live feed here.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Last Auto Prediction -->
+        <div class="card">
+          <div class="card-label"><div class="card-label-bar" style="background:var(--teal)"></div>Last Auto Prediction</div>
+          <div id="autoWrap">
+            <div class="empty">
+              <div class="empty-icon">⟳</div>
+              <div class="empty-text">Click <strong style="color:var(--amber)">Auto Predict</strong> in the top-right to fetch the latest pipeline run.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+
+        <!-- SHAP panel -->
+        <div class="card">
+          <div class="card-label"><div class="card-label-bar" style="background:var(--teal)"></div>Explainable AI — Feature Impact</div>
+          <div id="dashShap">
+            <div class="empty" style="padding:32px 12px;">
+              <div class="empty-icon">🧠</div>
+              <div class="empty-text">Per-prediction feature contributions<br>will appear here after running a prediction.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Global importance chart -->
+        <div class="card">
+          <div class="card-label"><div class="card-label-bar" style="background:var(--amber)"></div>Global Feature Importance</div>
+          <canvas id="globalChart" height="210"></canvas>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /dashboard -->
+
+  <!-- ═══ PREDICT ══════════════════════════════ -->
+  <div id="page-predict" class="page">
+
+    <div class="page-hdr">
+      <div>
+        <div class="eyebrow">Prediction Engine</div>
+        <div class="page-title">Run Prediction</div>
+        <div class="page-desc">Enter pipeline metrics manually or upload a CSV log file for bulk prediction.</div>
+      </div>
+    </div>
+
+    <!-- Alert threshold -->
+    <div class="thr-row">
+      <label>Alert Threshold</label>
+      <input type="range" min="10" max="90" value="60" id="thrSlider"
+             oninput="document.getElementById('thrVal').textContent=this.value+'%'">
+      <span class="thr-val" id="thrVal">60%</span>
+      <span class="thr-hint">— triggers the red alert banner</span>
+    </div>
+
+    <div class="g-pred">
+
+      <!-- LEFT — form + upload -->
+      <div>
+        <div class="card">
+          <div class="card-label"><div class="card-label-bar"></div>Manual Input</div>
+          <div class="form-grid">
+            <div class="fg">
+              <label>Pipeline ID</label>
+              <input class="fi" type="number" id="fp_id" placeholder="e.g. 101">
+            </div>
+            <div class="fg">
+              <label>Execution Time (s)</label>
+              <input class="fi" type="number" id="fp_exec" placeholder="e.g. 45.0">
+            </div>
+            <div class="fg">
+              <label>Records Processed</label>
+              <input class="fi" type="number" id="fp_rec" placeholder="e.g. 12000">
+            </div>
+            <div class="fg">
+              <label>Error Count</label>
+              <input class="fi" type="number" id="fp_err" placeholder="e.g. 3">
+            </div>
+            <div class="fg">
+              <label>CPU Usage (%)</label>
+              <input class="fi" type="number" id="fp_cpu" placeholder="e.g. 78.5">
+            </div>
+            <div class="fg">
+              <label>Memory Usage (%)</label>
+              <input class="fi" type="number" id="fp_mem" placeholder="e.g. 65.0">
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:20px;">
+            <label>Data Delay (s)</label>
+            <input class="fi" type="number" id="fp_delay" placeholder="e.g. 2.1">
+          </div>
+          <button class="btn btn-amber btn-full" onclick="manualPredict()">
+            <span class="spin" id="manualSpin"></span>
+            Run Prediction
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-label"><div class="card-label-bar" style="background:var(--blue)"></div>Bulk CSV Upload</div>
+          <div class="upload-zone" id="upZone">
+            <input type="file" id="upFile" accept=".csv">
+            <div class="upload-icon">📂</div>
+            <div class="upload-text">Drag & drop a CSV, or click to browse</div>
+            <div class="upload-hint">Expected format: pipeline_logs.csv</div>
+          </div>
+          <button class="btn btn-ghost btn-full" style="margin-top:14px;" onclick="uploadPredict()">
+            Upload & Predict
+          </button>
+          <div id="upResult" style="margin-top:14px;"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT — result + SHAP -->
+      <div>
+        <div class="card">
+          <div class="card-label"><div class="card-label-bar" style="background:var(--red)"></div>Prediction Result</div>
+          <div id="predResult">
+            <div class="empty">
+              <div class="empty-icon">◎</div>
+              <div class="empty-text">Fill in the form on the left and click<br><strong style="color:var(--amber)">Run Prediction</strong> to see results.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-label"><div class="card-label-bar" style="background:var(--teal)"></div>Explainable AI — Why this prediction?</div>
+          <div id="predShap">
+            <div class="empty" style="padding:32px 12px;">
+              <div class="empty-icon">🧠</div>
+              <div class="empty-text">Feature-level contributions will appear<br>here after running a prediction.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /predict -->
+
+  <!-- ═══ WHAT-IF ═══════════════════════════════ -->
+  <div id="page-whatif" class="page">
+
+    <div class="page-hdr">
+      <div>
+        <div class="eyebrow">Simulator</div>
+        <div class="page-title">What-If Simulator</div>
+        <div class="page-desc">Drag sliders to see how each parameter affects failure risk in real time.</div>
+      </div>
+    </div>
+
+    <div class="g-pred">
+
+      <div class="card">
+        <div class="card-label"><div class="card-label-bar"></div>Adjust Parameters</div>
+
+        <div class="sl-group">
+          <div class="sl-header"><span class="sl-name">Execution Time (s)</span><span class="sl-val" id="wv_exec">50</span></div>
+          <input type="range" min="1" max="200" value="50" id="ws_exec" oninput="wiUpdate()">
+        </div>
+        <div class="sl-group">
+          <div class="sl-header"><span class="sl-name">Error Count</span><span class="sl-val" id="wv_err">2</span></div>
+          <input type="range" min="0" max="50" value="2" id="ws_err" oninput="wiUpdate()">
+        </div>
+        <div class="sl-group">
+          <div class="sl-header"><span class="sl-name">CPU Usage (%)</span><span class="sl-val" id="wv_cpu">50</span></div>
+          <input type="range" min="0" max="100" value="50" id="ws_cpu" oninput="wiUpdate()">
+        </div>
+        <div class="sl-group">
+          <div class="sl-header"><span class="sl-name">Memory Usage (%)</span><span class="sl-val" id="wv_mem">50</span></div>
+          <input type="range" min="0" max="100" value="50" id="ws_mem" oninput="wiUpdate()">
+        </div>
+        <div class="sl-group">
+          <div class="sl-header"><span class="sl-name">Data Delay (s)</span><span class="sl-val" id="wv_delay">1</span></div>
+          <input type="range" min="0" max="30" value="1" id="ws_delay" oninput="wiUpdate()">
+        </div>
+        <div class="sl-group">
+          <div class="sl-header"><span class="sl-name">Records Processed</span><span class="sl-val" id="wv_rec">10,000</span></div>
+          <input type="range" min="100" max="100000" step="100" value="10000" id="ws_rec" oninput="wiUpdate()">
+        </div>
+
+        <div class="divider"></div>
+        <button class="btn btn-amber" onclick="wiPredict()">
+          <span class="spin" id="wiSpin"></span>
+          Send to Model
+        </button>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-label"><div class="card-label-bar" style="background:var(--red)"></div>Live Risk Estimate</div>
+          <div style="text-align:center; padding:20px 0 12px;">
+            <div style="font-family:'Syne',sans-serif; font-size:88px; font-weight:800; letter-spacing:-0.04em; line-height:1;" id="wiPct">—</div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); letter-spacing:0.12em; margin-top:6px;">ESTIMATED FAILURE RISK</div>
+          </div>
+          <div class="risk-meter"><div class="risk-fill" id="wiRiskFill" style="width:0%;background:var(--teal)"></div></div>
+          <div class="risk-labels"><span>Safe</span><span>Critical</span></div>
+          <div style="text-align:center; margin-top:16px;" id="wiChip"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-label"><div class="card-label-bar" style="background:var(--blue)"></div>Parameter Profile (Radar)</div>
+          <canvas id="wiRadar" height="220"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /whatif -->
+
+  <!-- ═══ HISTORY ═══════════════════════════════ -->
+  <div id="page-history" class="page">
+
+    <div class="page-hdr">
+      <div>
+        <div class="eyebrow">Audit Log</div>
+        <div class="page-title">Prediction History</div>
+        <div class="page-desc">All predictions made this session, saved in local storage.</div>
+      </div>
+      <button class="btn btn-red-soft btn-sm" onclick="clearHist()">Clear Log</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><div class="card-label-bar"></div>Session Records</div>
+      <div id="histTable">
+        <div class="empty">
+          <div class="empty-icon">≡</div>
+          <div class="empty-text">No predictions logged yet.<br>Run a prediction to start the log.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><div class="card-label-bar" style="background:var(--red)"></div>Risk Trend Over Time</div>
+      <canvas id="histChart" height="130"></canvas>
+    </div>
+
+  </div><!-- /history -->
+
+  </div><!-- /content -->
+</div><!-- /main-wrap -->
+
+<!-- ═══════════════════════════════════════════
+  JAVASCRIPT
+═══════════════════════════════════════════ -->
 <script>
+/* ── STATE ─────────────────────────────── */
+const API   = 'http://127.0.0.1:5000';
+let hist    = JSON.parse(localStorage.getItem('pg_hist_v3') || '[]');
+let feedArr = [];
+let gChart  = null, wiChart = null, hChart = null;
 
-// MANUAL
-document.getElementById("predictForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
+const FEATURES    = ['pipeline_id','execution_time','records_processed','error_count','cpu_usage','memory_usage','data_delay'];
+const MOCK_GLOBAL = [0.04, 0.22, 0.10, 0.28, 0.18, 0.12, 0.06];
 
-    const data = {
-        pipeline_id: Number(pipeline_id.value),
-        execution_time: Number(execution_time.value),
-        records_processed: Number(records_processed.value),
-        error_count: Number(error_count.value),
-        cpu_usage: Number(cpu_usage.value),
-        memory_usage: Number(memory_usage.value),
-        data_delay: Number(data_delay.value)
-    };
+const PAGE_META = {
+  dashboard : ['Dashboard',  'Pipeline health overview'],
+  predict   : ['Predict',    'Per-prediction explainable AI'],
+  whatif    : ['What-If Simulator', 'Parameter sensitivity analysis'],
+  history   : ['History',    'Session prediction log'],
+};
 
-    const res = await fetch("http://127.0.0.1:5000/predict", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data)
-    });
-
-    const result = await res.json();
-    showResult(result);
-});
-
-// AUTO
-async function autoPredict() {
-    const res = await fetch("http://127.0.0.1:5000/auto_predict");
-    const result = await res.json();
-    showResult(result);
+/* ── NAVIGATION ────────────────────────── */
+function gotoPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('topTitle').textContent = PAGE_META[name][0];
+  document.getElementById('topSub').textContent   = PAGE_META[name][1];
+  if (name === 'history') renderHist();
+  if (name === 'whatif')  initRadar();
 }
 
-// UPLOAD
-async function uploadFile() {
-    const file = fileInput.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
+/* ── DASHBOARD LOAD ────────────────────── */
+async function loadDashboard() {
+  try {
+    const r = await fetch(`${API}/dashboard`);
+    const d = await r.json();
 
-    const res = await fetch("http://127.0.0.1:5000/upload_predict", {
-        method: "POST",
-        body: formData
-    });
+    const exec = parseFloat(d.avg_execution_time || 0).toFixed(1);
+    const err  = parseFloat(d.avg_error_count    || 0).toFixed(2);
+    const cpu  = parseFloat(d.avg_cpu_usage      || 0).toFixed(1);
 
-    const data = await res.json();
-    displayTable(data);
+    document.getElementById('sExec').innerHTML = `${exec} <span class="unit">s</span>`;
+    document.getElementById('sErr').textContent  = err;
+    document.getElementById('sCpu').innerHTML  = `${cpu} <span class="unit">%</span>`;
+
+    setTimeout(() => {
+      document.getElementById('sExecFill').style.width = Math.min((d.avg_execution_time / 200) * 100, 100) + '%';
+      document.getElementById('sErrFill').style.width  = Math.min((d.avg_error_count    / 20)  * 100, 100) + '%';
+      document.getElementById('sCpuFill').style.width  = Math.min(d.avg_cpu_usage,              100)       + '%';
+    }, 200);
+
+  } catch(e) {
+    ['sExec','sErr','sCpu'].forEach(id =>
+      document.getElementById(id).innerHTML = '<span style="font-size:22px;color:var(--text-dim)">API offline</span>'
+    );
+  }
 }
 
-// SHOW RESULT
-function showResult(r) {
-    result.innerText = r.prediction === 1 ? "⚠️ High Risk" : "✅ Safe";
-    reason.innerText = r.reason || "";
-    drawChart(r.failure_probability);
-}
+/* ── GLOBAL IMPORTANCE CHART ───────────── */
+function drawGlobal(imp) {
+  const ctx = document.getElementById('globalChart').getContext('2d');
+  if (gChart) gChart.destroy();
 
-// CHART
-function drawChart(p) {
-    const ctx = chart.getContext("2d");
+  const vals   = FEATURES.map((f, i) => imp ? (imp[f] ?? MOCK_GLOBAL[i]) : MOCK_GLOBAL[i]);
+  const sorted = FEATURES.map((f, i) => [f, vals[i]]).sort((a,b) => b[1] - a[1]);
 
-    if (window.myChart) window.myChart.destroy();
-
-    window.myChart = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-            labels: ["Risk", "Safe"],
-            datasets: [{
-                data: [p, 1-p],
-                backgroundColor: ["#ff4d4d", "#4caf50"]
-            }]
+  gChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(s => s[0]),
+      datasets: [{
+        data: sorted.map(s => +(s[1] * 100).toFixed(1)),
+        backgroundColor: sorted.map((_, i) =>
+          i === 0 ? 'rgba(247,183,49,0.85)' : 'rgba(91,151,255,0.40)'
+        ),
+        borderRadius: 5,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => `  ${c.raw.toFixed(1)}%` } }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(42,47,63,0.7)' },
+          ticks: { color: '#6b7590', font: { size: 12, family: 'JetBrains Mono' } }
         },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-}
-
-// TABLE
-function displayTable(data) {
-    const table = resultTable;
-    table.innerHTML = "";
-
-    if (!Array.isArray(data)) {
-        table.innerHTML = "<tr><td>Error loading data</td></tr>";
-        return;
+        y: {
+          grid: { display: false },
+          ticks: { color: '#a8b0c8', font: { size: 12, family: 'JetBrains Mono' } }
+        }
+      }
     }
-
-    const headers = Object.keys(data[0]);
-    table.innerHTML += "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
-
-    data.forEach(row => {
-        table.innerHTML += "<tr>" +
-            headers.map(h => `<td>${row[h]}</td>`).join("") +
-            "</tr>";
-    });
+  });
 }
 
-</script>
+/* ── SHAP RENDERER ─────────────────────── */
+function renderShap(contributions, targetId) {
+  if (!contributions || !contributions.length) return;
 
+  const maxAbs = Math.max(...contributions.map(c => Math.abs(c.contribution)), 0.001);
+
+  let html = `
+    <div class="shap-legend">
+      <div class="shap-leg">
+        <div class="shap-leg-sq" style="background:var(--red)"></div>
+        Increases Risk
+      </div>
+      <div class="shap-leg">
+        <div class="shap-leg-sq" style="background:var(--teal)"></div>
+        Reduces Risk
+      </div>
+    </div>`;
+
+  contributions.forEach(c => {
+    const barPct = (Math.abs(c.contribution) / maxAbs) * 100;
+    const isPos  = c.contribution > 0;
+    const isZero = Math.abs(c.contribution) < 0.0001;
+    const valStr = isZero
+      ? '0.00pp'
+      : (c.contribution > 0 ? '+' : '') + (c.contribution * 100).toFixed(2) + 'pp';
+
+    html += `
+      <div class="shap-row">
+        <div class="shap-feat">${c.feature}</div>
+        <div class="shap-bar-wrap">
+          ${isZero
+            ? `<div style="width:4px;height:100%;background:var(--border2);border-radius:6px;"></div>`
+            : isPos
+              ? `<div class="shap-bar-pos" style="width:${barPct}%"></div>`
+              : `<div class="shap-bar-neg" style="width:${barPct}%"></div>`
+          }
+        </div>
+        <div class="shap-pp ${isZero ? 'zero' : isPos ? 'pos' : 'neg'}">${valStr}</div>
+      </div>`;
+  });
+
+  html += `
+    <div class="shap-note">
+      📌 Values show how much each feature shifts the failure probability
+      (in percentage points) compared to a neutral baseline input.
+      <strong style="color:var(--red)">Positive = pushes toward failure.</strong>
+      <strong style="color:var(--teal)">Negative = stabilizes pipeline.</strong>
+    </div>`;
+
+  document.getElementById(targetId).innerHTML = html;
+}
+
+/* ── AUTO PREDICT ──────────────────────── */
+async function autoPredict() {
+  const sp = document.getElementById('autoSpin');
+  sp.classList.add('on');
+  try {
+    const r = await fetch(`${API}/auto_predict`);
+    const d = await r.json();
+
+    const prob   = (d.failure_probability * 100).toFixed(1);
+    const isRisk = d.prediction === 1;
+
+    document.getElementById('autoWrap').innerHTML = `
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:6px 0 12px;">
+        <span class="chip ${isRisk ? 'chip-risk' : 'chip-safe'}">
+          ${isRisk ? '⚠ High Risk' : '✓ Safe'}
+        </span>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:var(--text-sub);">
+          Probability:
+          <strong style="color:${isRisk ? 'var(--red)' : 'var(--teal)'}; font-size:18px;">${prob}%</strong>
+        </span>
+      </div>
+      ${d.reason ? `<div class="reason-box">${d.reason}</div>` : ''}`;
+
+    renderShap(d.feature_contributions, 'dashShap');
+    drawGlobal(d.global_importances);
+    addFeed(d, 'AUTO');
+    saveHist(d, 'auto');
+    checkAlert(d.failure_probability);
+
+  } catch(e) {
+    document.getElementById('autoWrap').innerHTML =
+      `<span style="color:var(--red); font-size:14px;">⚠ Could not reach API — is Flask running?</span>`;
+  } finally {
+    sp.classList.remove('on');
+  }
+}
+
+/* ── MANUAL PREDICT ────────────────────── */
+async function manualPredict() {
+  const sp = document.getElementById('manualSpin');
+  sp.classList.add('on');
+
+  const payload = {
+    pipeline_id:       +document.getElementById('fp_id').value    || 1,
+    execution_time:    +document.getElementById('fp_exec').value  || 0,
+    records_processed: +document.getElementById('fp_rec').value   || 0,
+    error_count:       +document.getElementById('fp_err').value   || 0,
+    cpu_usage:         +document.getElementById('fp_cpu').value   || 0,
+    memory_usage:      +document.getElementById('fp_mem').value   || 0,
+    data_delay:        +document.getElementById('fp_delay').value || 0,
+  };
+
+  try {
+    const r = await fetch(`${API}/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+
+    renderResult(d, 'predResult');
+    renderShap(d.feature_contributions, 'predShap');
+    renderShap(d.feature_contributions, 'dashShap');
+    drawGlobal(d.global_importances);
+    addFeed(d, 'MANUAL');
+    saveHist(d, 'manual');
+    checkAlert(d.failure_probability);
+
+  } catch(e) {
+    document.getElementById('predResult').innerHTML =
+      `<span style="color:var(--red); font-size:14px;">⚠ API unreachable — start your Flask server first.</span>`;
+  } finally {
+    sp.classList.remove('on');
+  }
+}
+
+function renderResult(d, targetId) {
+  const prob   = (d.failure_probability * 100).toFixed(1);
+  const isRisk = d.prediction === 1;
+  document.getElementById(targetId).innerHTML = `
+    <div class="result-center">
+      <div class="big-prob" style="color:${isRisk ? 'var(--red)' : 'var(--teal)'}">
+        ${prob}<span class="pct-sym">%</span>
+      </div>
+      <div class="prob-tag">FAILURE PROBABILITY</div>
+      <div>
+        <span class="verdict ${isRisk ? 'v-risk' : 'v-safe'}">
+          ${isRisk ? '⚠ High Risk — Action Needed' : '✓ Pipeline is Safe'}
+        </span>
+      </div>
+      ${d.reason ? `<div class="reason-box">${d.reason}</div>` : ''}
+    </div>`;
+}
+
+/* ── UPLOAD PREDICT ────────────────────── */
+async function uploadPredict() {
+  const file = document.getElementById('upFile').files[0];
+  if (!file) { alert('Please select a CSV file first.'); return; }
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const r = await fetch(`${API}/upload_predict`, { method: 'POST', body: fd });
+    const d = await r.json();
+    if (Array.isArray(d)) {
+      const heads = Object.keys(d[0]).map(h => `<th>${h}</th>`).join('');
+      const rows  = d.map(row => '<tr>' + Object.values(row).map(v => `<td>${v}</td>`).join('') + '</tr>').join('');
+      document.getElementById('upResult').innerHTML =
+        `<div style="overflow-x:auto; margin-top:4px;"><table class="htable"><thead><tr>${heads}</tr></thead><tbody>${rows}</tbody></table></div>`;
+    } else {
+      renderResult(d, 'upResult');
+      if (d.feature_contributions) renderShap(d.feature_contributions, 'predShap');
+    }
+  } catch(e) {
+    document.getElementById('upResult').innerHTML =
+      `<span style="color:var(--red); font-size:14px;">⚠ Upload failed</span>`;
+  }
+}
+
+/* ── FEED ──────────────────────────────── */
+function addFeed(d, type) {
+  const time = new Date().toLocaleTimeString('en', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  const prob = (d.failure_probability * 100).toFixed(1);
+  feedArr.unshift({ time, type, prob, risk: d.prediction === 1 });
+  if (feedArr.length > 12) feedArr.pop();
+
+  document.getElementById('feedWrap').innerHTML = feedArr.map(f => `
+    <div class="feed-row">
+      <span class="feed-time">${f.time}</span>
+      <span class="feed-type">${f.type}</span>
+      <span class="feed-msg">${f.risk ? 'Failure risk detected' : 'Pipeline nominal'}</span>
+      <span class="chip ${f.risk ? 'chip-risk' : 'chip-safe'}" style="font-size:13px;">${f.prob}%</span>
+    </div>`).join('');
+}
+
+/* ── ALERT ─────────────────────────────── */
+function checkAlert(prob) {
+  const thr = (+(document.getElementById('thrSlider')?.value ?? 60)) / 100;
+  if (prob >= thr) {
+    document.getElementById('alertMsg').textContent =
+      `High failure probability: ${(prob*100).toFixed(1)}% — exceeds your ${(thr*100).toFixed(0)}% threshold.`;
+    document.getElementById('alertBar').classList.add('show');
+    setTimeout(() => document.getElementById('alertBar').classList.remove('show'), 10000);
+  }
+}
+
+/* ── WHAT-IF ───────────────────────────── */
+function wiUpdate() {
+  const keys = ['exec','err','cpu','mem','delay'];
+  keys.forEach(k => {
+    const v = document.getElementById('ws_' + k).value;
+    document.getElementById('wv_' + k).textContent = v;
+  });
+  const recVal = document.getElementById('ws_rec').value;
+  document.getElementById('wv_rec').textContent = parseInt(recVal).toLocaleString();
+
+  const exec  = +document.getElementById('ws_exec').value;
+  const err   = +document.getElementById('ws_err').value;
+  const cpu   = +document.getElementById('ws_cpu').value;
+  const mem   = +document.getElementById('ws_mem').value;
+  const delay = +document.getElementById('ws_delay').value;
+
+  const raw = (err/50)*0.35 + (cpu/100)*0.30 + (mem/100)*0.15 + (exec/200)*0.12 + (delay/30)*0.08;
+  const pct = Math.min(Math.round(raw * 100), 99);
+
+  const col = pct >= 60 ? 'var(--red)' : pct >= 35 ? 'var(--amber)' : 'var(--teal)';
+  document.getElementById('wiPct').textContent  = pct + '%';
+  document.getElementById('wiPct').style.color  = col;
+  document.getElementById('wiRiskFill').style.width      = pct + '%';
+  document.getElementById('wiRiskFill').style.background = col;
+
+  const chipEl = document.getElementById('wiChip');
+  if      (pct >= 60) chipEl.innerHTML = `<span class="chip chip-risk" style="font-size:15px;">⚠ High Risk</span>`;
+  else if (pct >= 35) chipEl.innerHTML = `<span class="chip chip-warn" style="font-size:15px;">⚡ Moderate Risk</span>`;
+  else                chipEl.innerHTML = `<span class="chip chip-safe" style="font-size:15px;">✓ Safe</span>`;
+
+  if (wiChart) {
+    wiChart.data.datasets[0].data = [cpu, mem, err*2, exec/2, delay*3, +document.getElementById('ws_rec').value/10000];
+    wiChart.update('none');
+  }
+}
+
+async function wiPredict() {
+  const sp = document.getElementById('wiSpin');
+  sp.classList.add('on');
+  const payload = {
+    pipeline_id:       1,
+    execution_time:    +document.getElementById('ws_exec').value,
+    records_processed: +document.getElementById('ws_rec').value,
+    error_count:       +document.getElementById('ws_err').value,
+    cpu_usage:         +document.getElementById('ws_cpu').value,
+    memory_usage:      +document.getElementById('ws_mem').value,
+    data_delay:        +document.getElementById('ws_delay').value,
+  };
+  try {
+    const r = await fetch(`${API}/predict`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    const d = await r.json();
+    const prob = (d.failure_probability * 100).toFixed(1);
+    document.getElementById('wiPct').textContent = prob + '%';
+    document.getElementById('wiRiskFill').style.width = prob + '%';
+    addFeed(d, 'WHATIF');
+    saveHist(d, 'what-if');
+    checkAlert(d.failure_probability);
+  } catch(e) {}
+  finally { sp.classList.remove('on'); }
+}
+
+function initRadar() {
+  const ctx = document.getElementById('wiRadar').getContext('2d');
+  if (wiChart) wiChart.destroy();
+  wiChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['CPU %','Memory %','Errors × 2','Exec ÷ 2','Delay × 3','Records / 10k'],
+      datasets: [{
+        label: 'Parameters',
+        data: [50, 50, 4, 25, 3, 1],
+        backgroundColor: 'rgba(247,183,49,0.1)',
+        borderColor: 'rgba(247,183,49,0.7)',
+        pointBackgroundColor: 'var(--amber)',
+        pointRadius: 5,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      scales: {
+        r: {
+          grid: { color: 'rgba(42,47,63,0.9)' },
+          ticks: { display: false },
+          pointLabels: { color: '#a8b0c8', font: { size: 13, family: 'Inter' } }
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+/* ── HISTORY ───────────────────────────── */
+function saveHist(d, type) {
+  hist.unshift({
+    time:       new Date().toLocaleString(),
+    type,
+    prediction: d.prediction,
+    prob:       (d.failure_probability * 100).toFixed(1),
+    reason:     d.reason || '—',
+  });
+  if (hist.length > 60) hist.pop();
+  localStorage.setItem('pg_hist_v3', JSON.stringify(hist));
+}
+
+function renderHist() {
+  const el = document.getElementById('histTable');
+
+  if (!hist.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">≡</div><div class="empty-text">No predictions logged yet.</div></div>`;
+    drawHistChart([]);
+    return;
+  }
+
+  const rows = hist.map(h => `
+    <tr>
+      <td style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-dim);">${h.time}</td>
+      <td style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--amber); font-weight:600;">${h.type.toUpperCase()}</td>
+      <td>${h.prediction === 1
+        ? `<span class="chip chip-risk">⚠ High Risk</span>`
+        : `<span class="chip chip-safe">✓ Safe</span>`}
+      </td>
+      <td style="font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:600; color:${h.prediction===1?'var(--red)':'var(--teal)'};">${h.prob}%</td>
+      <td style="font-size:14px; color:var(--text-sub); max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${h.reason}</td>
+    </tr>`).join('');
+
+  el.innerHTML = `
+    <table class="htable">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Type</th>
+          <th>Result</th>
+          <th>Probability</th>
+          <th>Root Cause</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  drawHistChart(hist);
+}
+
+function drawHistChart(data) {
+  const ctx = document.getElementById('histChart').getContext('2d');
+  if (hChart) hChart.destroy();
+  const last = data.slice(0, 15).reverse();
+
+  hChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: last.map((_, i) => `#${i + 1}`),
+      datasets: [{
+        data: last.map(h => h.prob),
+        borderColor: 'rgba(247,183,49,0.8)',
+        backgroundColor: 'rgba(247,183,49,0.06)',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: last.map(h => h.prediction === 1 ? 'var(--red)' : 'var(--teal)'),
+        pointRadius: 6,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(42,47,63,0.8)' },
+          ticks: { color: '#6b7590', font: { size: 13, family: 'JetBrains Mono' } }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#6b7590', font: { size: 13, family: 'JetBrains Mono' } }
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function clearHist() {
+  if (!confirm('Clear all prediction history?')) return;
+  hist = [];
+  localStorage.removeItem('pg_hist_v3');
+  renderHist();
+}
+
+/* ── DRAG-DROP UPLOAD ──────────────────── */
+function setupDragDrop() {
+  const zone = document.getElementById('upZone');
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('over'); });
+  zone.addEventListener('dragleave', ()  => zone.classList.remove('over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('over');
+    document.getElementById('upFile').files = e.dataTransfer.files;
+  });
+}
+
+/* ── INIT ──────────────────────────────── */
+window.onload = () => {
+  loadDashboard();
+  drawGlobal(null);
+  wiUpdate();
+  setupDragDrop();
+};
+</script>
 </body>
 </html>
