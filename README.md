@@ -1,60 +1,77 @@
 # 🚀 Data Pipeline Failure Prediction System
 
-An end-to-end Machine Learning system that predicts potential failures in data pipelines, provides root cause analysis, and supports both real-time and batch predictions through an interactive dashboard.
+An end-to-end **Machine Learning + Full-Stack application** that predicts potential failures in data pipelines, provides root cause analysis, and visualizes insights through an interactive dashboard.
+
+---
+
+## 🌐 Live Demo
+
+- 🔗 Frontend: pipelineguard.netlify.app
+- 🔗 Backend API: https://pipelineguard-api.onrender.com
 
 ---
 
 ## 📌 Overview
 
-This project simulates a real-world pipeline monitoring system where:
+Modern data pipelines are critical for analytics systems, but failures can disrupt operations.
 
-* Pipeline logs are analyzed
-* Failures are predicted in advance
-* Root causes are identified
-* Results are visualized via a dashboard
+This project shifts monitoring from **reactive → proactive** by:
+- Predicting failures before they occur
+- Identifying root causes
+- Providing actionable insights via dashboard
 
 ---
 
 ## 🎯 Features
 
-### 🔹 Real-Time Prediction
+### ⚡ Real-Time Prediction
+- Fetch latest pipeline data from database
+- Predict failure instantly using trained ML model
 
-* Fetch latest pipeline data from database
-* Predict failure instantly
+### 📂 Batch Prediction (CSV Upload)
+- Upload pipeline logs
+- Predict multiple records at once
+- View results in structured table format
 
-### 🔹 Batch Prediction (CSV Upload)
+### ✍️ Manual Prediction
+- Input pipeline parameters manually
+- Ideal for testing and demonstrations
 
-* Upload pipeline logs
-* Get predictions for multiple records
-* View results in table format
+### 🧠 Root Cause Analysis
+- Uses feature importance from Random Forest
+- Explains **why a failure might occur**
 
-### 🔹 Manual Prediction
-
-* Enter pipeline parameters manually
-* Useful for testing and demos
-
-### 🔹 Root Cause Analysis
-
-* Uses feature importance from ML model
-* Explains why failure might occur
-
-### 🔹 Interactive Dashboard
-
-* Clean UI with multiple sections
-* Doughnut chart visualization
-* Table for bulk predictions
+### 📊 Interactive Dashboard
+- Clean UI with multiple sections
+- Doughnut chart visualization
+- Data tables for insights
 
 ---
 
 ## 🧠 Tech Stack
 
-* **Frontend:** HTML, CSS, JavaScript, Chart.js
-* **Backend:** Flask (Python)
-* **Machine Learning:** Random Forest (Scikit-learn)
-* **Database:** PostgreSQL
-* **Data Processing:** Pandas, NumPy
+| Layer | Technology |
+|------|-----------|
+| Frontend | HTML, CSS, JavaScript, Chart.js |
+| Backend | Flask (Python) |
+| Machine Learning | Random Forest (Scikit-learn) |
+| Database | PostgreSQL (Render) |
+| Data Processing | Pandas, NumPy |
+| Deployment | Render (Backend), Netlify (Frontend) |
 
 ---
+
+## 🏗️ System Architecture
+
+```
+Frontend (Netlify)
+↓
+Flask API (Render)
+↓
+PostgreSQL Database (Render)
+↓
+Machine Learning Model
+```
 
 ## 📂 Project Structure
 
@@ -66,8 +83,12 @@ pipeline-failure-prediction/
 │   ├── model.py
 │   ├── preprocess.py
 │   ├── db.py
+|   |── requiremnts.txt
+|   |── Procfile
 │   └── saved_model/
-│
+|        ├── model.pkl
+|        └── scaler.pkl
+|   
 ├── frontend/
 │   └── index.html
 │
@@ -78,6 +99,30 @@ pipeline-failure-prediction/
 └── README.md
 ```
 
+---
+
+## 🔗 API Endpoints
+
+| Endpoint | Method | Description |
+|--------|--------|------------|
+| `/` | GET | API health check |
+| `/data` | GET | Fetch pipeline data |
+| `/predict` | POST | Predict failure from input |
+| `/auto_predict` | GET | Predict using latest DB data |
+| `/upload_predict` | POST | Bulk prediction from CSV |
+| `/dashboard` | GET | Aggregated metrics |
+
+---
+
+## 📊 Example Output
+
+```json
+{
+  "prediction": 1,
+  "failure_probability": 0.87,
+  "top_cause": "cpu_usage",
+  "reason": "Failure likely due to high cpu usage"
+}
 ---
 
 ## ⚙️ Setup Instructions
@@ -139,18 +184,6 @@ python backend/app.py
 
 ---
 
-## 🔗 API Endpoints
-
-| Endpoint          | Method | Description                  |
-| ----------------- | ------ | ---------------------------- |
-| `/predict`        | POST   | Predict failure from input   |
-| `/auto_predict`   | GET    | Predict using latest DB data |
-| `/upload_predict` | POST   | Bulk prediction from CSV     |
-| `/data`           | GET    | Fetch sample data            |
-| `/dashboard`      | GET    | Aggregated metrics           |
-
----
-
 ## 📊 Example Output
 
 ```json
@@ -166,27 +199,26 @@ python backend/app.py
 
 ## 🎯 Key Highlights
 
-* End-to-end ML pipeline
-* Real-time + batch prediction system
-* Explainable AI (feature importance)
-* Full-stack integration
-* Interactive dashboard UI
+* ✅ End-to-end ML system
+* ✅ Real-time + batch prediction
+* ✅ Explainable AI (feature importance)
+* ✅ Cloud deployment (Render + Netlify)
+* ✅ Full-stack integration
 
 ---
 
 ## 🚀 Future Improvements
 
-* Deploy project (Render + Vercel)
-* Add authentication
-* Real-time monitoring dashboard
-* Advanced analytics
+* Authentication system
+* Real-time streaming (Kafka)
+* Advanced ML models (XGBoost)
+* Alert system (Email/SMS)
 
 ---
 
 ## 👩‍💻 Author
 
-Shruti
-B.Tech Data Science Student
+Shruti Wadnerkar
 
 ---
 
