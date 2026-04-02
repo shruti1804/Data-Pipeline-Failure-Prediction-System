@@ -8,8 +8,10 @@ from db import get_connection
 app = Flask(__name__)
 CORS(app)
 
-model = joblib.load("backend/saved_model/model.pkl")
-scaler = joblib.load("backend/saved_model/scaler.pkl")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+model = joblib.load(os.path.join(BASE_DIR, "saved_model/model.pkl"))
+scaler = joblib.load(os.path.join(BASE_DIR, "saved_model/scaler.pkl"))
 
 FEATURE_NAMES = [
     "pipeline_id",
