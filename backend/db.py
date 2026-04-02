@@ -1,3 +1,4 @@
+from backend.db import get_connection
 def get_connection():
     try:
         import psycopg2
