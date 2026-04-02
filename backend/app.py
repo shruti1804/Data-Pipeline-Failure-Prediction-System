@@ -1,5 +1,4 @@
 import joblib
-import os
 import numpy as np
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -8,10 +7,8 @@ from db import get_connection
 app = Flask(__name__)
 CORS(app)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-model = joblib.load(os.path.join(BASE_DIR, "saved_model/model.pkl"))
-scaler = joblib.load(os.path.join(BASE_DIR, "saved_model/scaler.pkl"))
+model = joblib.load("backend/saved_model/model.pkl")
+scaler = joblib.load("backend/saved_model/scaler.pkl")
 
 FEATURE_NAMES = [
     "pipeline_id",
@@ -284,4 +281,4 @@ def upload_predict():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True)
