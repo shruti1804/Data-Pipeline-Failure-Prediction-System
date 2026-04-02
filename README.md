@@ -6,7 +6,7 @@ An end-to-end **Machine Learning + Full-Stack application** that predicts potent
 
 ## 🌐 Live Demo
 
-- 🔗 Frontend: pipelineguard.netlify.app
+- 🔗 Frontend: https://pipelineguard.netlify.app
 - 🔗 Backend API: https://pipelineguard-api.onrender.com
 
 ---
