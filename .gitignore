@@ -8,9 +8,6 @@ __pycache__/
 # Environment variables
 .env
 
-# ML model files
-*.pkl
-
 # OS files
 .DS_Store
 Thumbs.db
