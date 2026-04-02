@@ -1,4 +1,5 @@
 import joblib
+import os
 import numpy as np
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -281,4 +282,4 @@ def upload_predict():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
