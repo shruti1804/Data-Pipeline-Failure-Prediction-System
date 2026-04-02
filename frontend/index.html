@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -181,7 +181,6 @@ body {
   top: 0;
   z-index: 90;
 }
-.tb-left {}
 .tb-title {
   font-family: 'Syne', sans-serif;
   font-size: 26px;
@@ -429,6 +428,7 @@ body {
 }
 .thr-hint { font-size: 13px; color: var(--text-dim); white-space: nowrap; }
 input[type="range"] {
+  appearance: none;
   -webkit-appearance: none;
   flex: 1;
   height: 4px;
@@ -437,6 +437,7 @@ input[type="range"] {
   outline: none;
 }
 input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
   -webkit-appearance: none;
   width: 18px; height: 18px;
   border-radius: 50%;
@@ -733,6 +734,151 @@ input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
 /* ════════════════════════════════════
+   LIGHT MODE THEME
+════════════════════════════════════ */
+[data-theme="light"] {
+  --bg:           #f2f4f8;
+  --surface:      #ffffff;
+  --surface2:     #f0f2f7;
+  --surface3:     #e4e8f0;
+  --border:       #d0d6e4;
+  --border2:      #b0baca;
+
+  --text:         #111827;
+  --text-sub:     #4b5563;
+  --text-dim:     #9ca3af;
+
+  --amber:        #7ac743;
+  --amber-bg:     rgba(122,199,67,0.12);
+  --amber-border: rgba(122,199,67,0.35);
+
+  --teal:         #0891b2;
+  --teal-bg:      rgba(8,145,178,0.10);
+  --teal-border:  rgba(8,145,178,0.30);
+
+  --red:          #dc2626;
+  --red-bg:       rgba(220,38,38,0.08);
+  --red-border:   rgba(220,38,38,0.25);
+
+  --blue:         #2563eb;
+  --blue-bg:      rgba(37,99,235,0.08);
+}
+[data-theme="light"] body { color: var(--text); }
+[data-theme="light"] .sidebar { background: #ffffff; border-right-color: var(--border); }
+[data-theme="light"] .topbar  { background: #ffffff; border-bottom-color: var(--border); }
+[data-theme="light"] .card    { background: #ffffff; border-color: var(--border); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+[data-theme="light"] .fi      { background: var(--surface2); border-color: var(--border); color: var(--text); }
+[data-theme="light"] .thr-row { background: var(--surface2); border-color: var(--border); }
+[data-theme="light"] .htable tbody tr:hover td { background: var(--surface2); }
+[data-theme="light"] .upload-zone { border-color: var(--border); }
+[data-theme="light"] .alert-bar  { background: var(--red-bg); border-bottom-color: var(--red-border); }
+[data-theme="light"] .shap-bar-wrap { background: var(--surface2); }
+[data-theme="light"] .shap-note    { background: var(--surface2); border-color: var(--border); }
+[data-theme="light"] .reason-box   { background: var(--surface2); border-color: var(--border); }
+
+/* ════════════════════════════════════
+   THEME TOGGLE BUTTON
+════════════════════════════════════ */
+.theme-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text-sub);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.theme-btn:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: var(--amber-bg);
+}
+
+/* ════════════════════════════════════
+   SOLUTIONS PANEL
+════════════════════════════════════ */
+.solutions-panel {
+  margin-top: 16px;
+  border: 1px solid var(--red-border);
+  border-radius: 12px;
+  overflow: hidden;
+  animation: solIn 0.35s ease;
+}
+@keyframes solIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.solutions-header {
+  background: var(--red-bg);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--red-border);
+}
+.solutions-header-icon { font-size: 20px; }
+.solutions-header-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--red);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.solutions-header-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-left: auto;
+  font-style: italic;
+}
+.solution-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  transition: background 0.15s;
+}
+[data-theme="light"] .solution-item { background: #ffffff; }
+.solution-item:last-child { border-bottom: none; }
+.solution-item:hover { background: var(--surface2); }
+.solution-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--red-bg);
+  border: 1px solid var(--red-border);
+  color: var(--red);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.solution-body {}
+.solution-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.solution-desc {
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+
+/* ════════════════════════════════════
    RESPONSIVE
 ════════════════════════════════════ */
 @media (max-width: 1000px) {
@@ -796,6 +942,7 @@ input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
     </div>
     <div class="tb-right">
       <button class="btn btn-outline btn-sm" onclick="loadDashboard()">↺ Refresh</button>
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle dark / light mode">🌙</button>
       <button class="btn btn-amber btn-sm"   onclick="autoPredict()">
         <span class="spin" id="autoSpin"></span>
         ⚡ Auto Predict
@@ -1140,6 +1287,85 @@ const PAGE_META = {
   history   : ['History',    'Session prediction log'],
 };
 
+/* ── THEME TOGGLE ───────────────────────── */
+(function initTheme() {
+  const saved = localStorage.getItem('pg_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = saved === 'dark' ? '🌙' : '☀️';
+})();
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('pg_theme', next);
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = next === 'dark' ? '🌙' : '☀️';
+}
+
+/* ── SOLUTIONS DATABASE ─────────────────── */
+const SOLUTIONS = {
+  error_count: [
+    { label: 'Audit Recent Error Logs',      desc: 'Review logs from the last 24 hours. High error counts usually point to schema mismatches or failed upstream dependencies.' },
+    { label: 'Add Retry Logic',              desc: 'Implement exponential back-off retries for transient errors — most intermittent failures resolve within 2–3 retries.' },
+    { label: 'Set Error Count Alerts',       desc: 'Configure alerts when error_count exceeds your baseline so you catch spikes before they cascade downstream.' },
+  ],
+  execution_time: [
+    { label: 'Optimise Slow Queries',        desc: 'Long run times often come from full-table scans. Add indexes on join columns and check the slow-query log.' },
+    { label: 'Increase Parallelism',         desc: 'Split large batches into parallel workers. A 4× parallelism increase typically cuts execution time by 60–70%.' },
+    { label: 'Switch to Incremental Loads',  desc: 'Replace full refresh with delta/incremental loads so only new or changed records are processed each run.' },
+  ],
+  cpu_usage: [
+    { label: 'Reduce Batch Size',            desc: 'Large batches spike CPU. Reduce batch size by 30–50% and monitor whether peak CPU drops below threshold.' },
+    { label: 'Reschedule to Off-Peak Hours', desc: 'Move the pipeline to a low-traffic window (e.g. 2–4 AM) to avoid resource contention with other workloads.' },
+    { label: 'Scale Up Compute Resources',   desc: 'If CPU consistently exceeds 80%, provision additional compute or upgrade the instance tier.' },
+  ],
+  memory_usage: [
+    { label: 'Release Unused Objects',       desc: 'Large DataFrames held in memory between steps cause bloat. Explicitly delete or checkpoint intermediate results.' },
+    { label: 'Use Streaming / Chunked Reads',desc: 'Replace full in-memory loads with streaming reads so memory stays flat throughout the run.' },
+    { label: 'Tune Heap Allocation',         desc: 'If using Spark or a JVM-backed engine, review executor memory allocation — under-allocation causes spill-to-disk.' },
+  ],
+  data_delay: [
+    { label: 'Check Source System SLA',      desc: 'Data delay is usually caused by a slow upstream source. Verify that source SLAs are met and investigate recent slowdowns.' },
+    { label: 'Add Data-Arrival Monitoring',  desc: 'Add a pre-run check that aborts and alerts if data hasn\'t arrived within the expected ingestion window.' },
+    { label: 'Improve Ingestion Bandwidth',  desc: 'Increase network throughput or switch to a faster transport (e.g. Kafka over JDBC polling) to reduce ingestion lag.' },
+  ],
+  records_processed: [
+    { label: 'Validate Record Volumes',      desc: 'Unexpected record counts signal upstream issues. Add a pre-run row-count check against expected min/max ranges.' },
+    { label: 'Partition Large Datasets',     desc: 'Very high record counts can overwhelm the pipeline. Partition by date or category and process in manageable chunks.' },
+    { label: 'Run De-duplication Checks',    desc: 'High counts may include duplicate or malformed rows. Add de-dup and null-check steps before core processing.' },
+  ],
+  pipeline_id: [
+    { label: 'Review Pipeline Configuration',desc: 'Verify all configuration parameters are correct — misconfigured IDs or connection strings cause silent failures.' },
+    { label: 'Check for Dependency Conflicts',desc: 'Cross-pipeline dependencies can create race conditions. Ensure scheduling avoids concurrent execution with conflicting pipelines.' },
+    { label: 'Run a Staging Health Check',   desc: 'Execute a manual health-check run in a staging environment to isolate whether the issue is environment-specific.' },
+  ],
+};
+
+function buildSolutionsHTML(topFeature) {
+  const items = SOLUTIONS[topFeature] || SOLUTIONS['pipeline_id'];
+  const featureLabel = topFeature.replace(/_/g, ' ').toUpperCase();
+  const rows = items.map((s, i) => `
+    <div class="solution-item">
+      <div class="solution-num">${i + 1}</div>
+      <div class="solution-body">
+        <div class="solution-label">${s.label}</div>
+        <div class="solution-desc">${s.desc}</div>
+      </div>
+    </div>`).join('');
+
+  return `
+    <div class="solutions-panel">
+      <div class="solutions-header">
+        <span class="solutions-header-icon">🔧</span>
+        <span class="solutions-header-title">Suggested Fixes — ${featureLabel}</span>
+        <span class="solutions-header-sub">Top driver of this failure</span>
+      </div>
+      ${rows}
+    </div>`;
+}
+
 /* ── NAVIGATION ────────────────────────── */
 function gotoPage(name, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1293,7 +1519,10 @@ async function autoPredict() {
           <strong style="color:${isRisk ? 'var(--red)' : 'var(--teal)'}; font-size:18px;">${prob}%</strong>
         </span>
       </div>
-      ${d.reason ? `<div class="reason-box">${d.reason}</div>` : ''}`;
+      ${d.reason ? `<div class="reason-box">${d.reason}</div>` : ''}
+      ${isRisk && d.feature_contributions && d.feature_contributions.length
+          ? buildSolutionsHTML(d.feature_contributions[0].feature)
+          : ''}`;
 
     renderShap(d.feature_contributions, 'dashShap');
     drawGlobal(d.global_importances);
@@ -1363,7 +1592,10 @@ function renderResult(d, targetId) {
         </span>
       </div>
       ${d.reason ? `<div class="reason-box">${d.reason}</div>` : ''}
-    </div>`;
+    </div>
+    ${isRisk && d.feature_contributions && d.feature_contributions.length
+        ? buildSolutionsHTML(d.feature_contributions[0].feature)
+        : ''}`;
 }
 
 /* ── UPLOAD PREDICT ────────────────────── */
